@@ -23,10 +23,13 @@ This will convert the gff3 file into the gtf file required by STAR and featureCo
 
 You will also want to generate the index files for Bowtie and STAR ahead of running the shell scripts.
 These may take a long time to run.
+
 Bowtie Index:
+
 `bowtie-build Zm-B73-REFERENCE-NAM-5.0.fa Zea_mays`
 
 STAR Index:
+
 `STAR --runThreadN 6 --runMode genomeGenerate --genomeDir /path/to/directory/B73_v5 --genomeFastaFiles /path/to/file/Zm-B73-REFERENCE-NAM-5.0.fa --sjdbGTFfile /path/to/file/B73v5.gtf --sjdbOverhang 99`
 
 Once the count tables are generated, they are ready to be passed to R using {R Script here}
