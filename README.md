@@ -26,7 +26,7 @@ These may take a long time to run.
 
 `bowtie-build Zm-B73-REFERENCE-NAM-5.0.fa Zea_mays`
 
-`STAR --runThreadN 6 --runMode genomeGenerate \
+` STAR --runThreadN 6 --runMode genomeGenerate \
 
 --genomeDir /path/to/directory/B73_v5 \
 
@@ -34,6 +34,6 @@ These may take a long time to run.
 
 --sjdbGTFfile /path/to/file/B73v5.gtf \
 
---sjdbOverhang 99`
+--sjdbOverhang 99 `
 
 Once the count tables are generated, they are ready to be passed to R using {R Script here}
