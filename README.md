@@ -6,12 +6,17 @@ Inbreds and F1 Hybrids" by Crisp, et al. 2020.
 ## Required Packages
 The following shell script packages are required to generate count tables:
 
-`sra-toolkit
-cutadapt
-trimmomatic
-STAR
-subread
-bowtie`
+`sra-toolkit`
+
+`cutadapt`
+
+`trimmomatic`
+
+`STAR`
+
+`subread`
+
+`bowtie`
 
 ## Data 
 To generate count tables used for downstream analysis, download the B73v5 genome fasta file, and gff3 annotation file from maizegdb.org. 
