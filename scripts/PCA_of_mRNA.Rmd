@@ -1,0 +1,68 @@
+---
+title: "PCA"
+author: "Brianna Griffin"
+date: "4/27/2021"
+output: html_document
+---
+
+####Recreating Figure 4A in Crisp et al. 2020 
+
+#I am utilizing this to try to recreate a PCA from Figure 4A in Crisp et al., 2020. 
+
+#The only thing the paper says about their PCA is "PCA was performed using the R package pcaMethods. Counts were log2 transformed, scaled by unit variance, and clustered using singular value de- composition (flags: scale 5 uv, center 5 T, method 5 svd)."
+#I will try to follow this the best I can.
+
+
+#"PCA was performed using the R package pcaMethods."
+#I downloaded BiocManager so I could download pcaMethods 
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("pcaMethods")
+
+library("BiocManager")
+library("pcaMethods")
+
+```
+
+#"Counts were log2 transformed, scaled by unit variance, and clustered using singular value decomposition (flags: scale 5 uv, center 5 T, method 5 svd)."
+
+#I start by log2 transforming my data 
+```{r}
+myTable <- read.table("~/EEOB546_Final_Yay-RNA/data/normalized_mRNA.txt", header = T, sep = "\t", stringsAsFactors = F)
+  row.names(myTable) <- myTable$Geneid
+  myTable <- myTable[-1]
+
+log_mRNA <- t(log2(myTable))
+```
+
+#Need to remove all columns that had only 0 values 
+#Turned all INF values to NA then removed those columns that only had NA to continue
+```{r}
+log_mRNA[is.infinite(log_mRNA)] <- NA   
+
+mRNA_df <- as.data.frame(log_mRNA)
+
+mRNA_transformed <- mRNA_df[,colSums(is.na(mRNA_df))<nrow(mRNA_df)]
+```
+
+#PCA calculation
+#I input the parameter the authors gave "(flags: scale 5 uv, center 5 T, method 5 svd)."
+```{r}
+pcamRNA <- pca(mRNA_transformed) 
+
+pcIr <- pca(mRNA_transformed, method="svd", nPcs=2)
+```
+#Note: The program would not use svd and instead used nipals stating that: "data has missing values using nipals instead of user requested svd"
+
+# Get a summary on the calculated model
+#Get the PCA
+```{r}
+summary(pcIr)
+
+slplot(pcIr, sl=as.character(mRNA_transformed[,5]))
+```
+
+#The authors say of Figure 4A: "For the mRNA data, variation in the expression of genes was heavily driven by tissue type (Fig. 4A), as has been observed previously (Zhou et al., 2019). Samples clustered by tissue type into discrete groups, with principal component 1 (PC1) explaining 28% of the variation and PC2 another 17%." 
+#The clustering seems to still look similar with very distinct clusters in roughly the same area but PC1 explained 45.89%

@@ -1,0 +1,91 @@
+---
+title: "Comparison of sRNA Profiles"
+author: "Brianna Griffin"
+date: "4/29/2021"
+output: html_document
+---
+
+####Recreating Figure 3 in Crisp et al. 2020 
+
+#I am utilizing this to try to recreate comparisons of sRNA profiles in inbreds relative to hybrids Figure 3 in Crisp et al., 2020. 
+
+#Here is what the paper said about FIgure 3: "We compared the profiles of these RNAs in each of the tissues from the full set of inbred and hybrid genotypes used in this study (Fig. 3A). Using a two-way ANOVA interaction model for unbalanced design (type III sum of squares), we found that pedigree (inbred/hybrid) was not a significant factor in sRNA counts for any mapping rate category (ANOVA, pedigree P . 0.05). Likewise, there was limited evidence for any significant global difference in the abundance of the different sRNA size classes, specifically between inbreds and hybrids (false discovery rate-adjustedP,0.05, Student’s t test), for example in seedling shoot tissue (Fig. 3B) or other tissues (Supplemental Fig. S5)."
+#I will try to follow this the best I can.
+
+
+###Turns out the sRNA data was very problematic and it was impossible to use it for the ANOVA due to missing peices. When I examined the sRNA_raw_counts.txt the counts were all 0. The normalized_sRNA.txt data was also filled with missing data and was mosty 0. 
+#I wanted to still try to do an ANOVA and replicate Figure 3 in some way, so I tried to do this with the mRNA data.
+#The code below is using the mRNA data. 
+
+#Upload libraries 
+```{r}
+install.packages("ggpubr")
+install.packages("car")
+install.packages("dplyr")
+install.packages("tidyverse")
+install.packages("stringr")
+ 
+library("ggpubr")
+library("car")
+library("dplyr")
+library("tidyverse")
+library("stringr")
+```
+
+#I start by formating the data in a way that is usable for ANOVA
+```{r}
+myTable <- read.table("~/EEOB546_Final_Yay-RNA/data/normalized_mRNA.txt", header = T, sep = "\t", stringsAsFactors = F)
+  row.names(myTable) <- myTable$Geneid
+  myTable <- myTable[-1]
+
+log_mRNA <- t(log2(myTable))log_mRNA[is.infinite(log_mRNA)] <- NA   
+
+mRNA_df <- as.data.frame(log_mRNA)
+
+metadatadf <- read.delim("~/EEOB546_Final_Yay-RNA/data/mRNA_metadata.txt")
+
+metadatatidy <- metadatadf[-c(4:5)]
+
+mRNA_df 
+df1 <- cbind(ID = rownames(mRNA_df), mRNA_df)
+
+ANOVAdf <- df1[1]
+```
+
+#Here I am codifying hybrid and inbred lines and formating the data to be able to use them for the ANOVA
+```{r}
+
+pedigreetype <- c("hybrid", "inbred")
+print(pedigreetype[1])
+
+pedigreeANOVA <-  data.frame()
+for (i in 1:103) {
+  IDstring <- (as.character(ANOVAdf$ID[i]))
+  print(IDstring)
+  if (str_detect(IDstring,"x")) {pedigreeANOVA <- rbind(pedigreeANOVA, pedigreetype[1])}
+  else {pedigreeANOVA <- rbind(pedigreeANOVA, pedigreetype[2])}
+}
+
+print(ANOVAdf$ID)
+mRNA_df_means <- rowMeans(mRNA_df, na.rm = TRUE)
+IDpedigree <- rbind(as.character(ANOVAdf$ID), pedigreeANOVA$X.inbred., mRNA_df_means)
+
+IDpedigree <- t(IDpedigree) 
+```
+
+#This is the code I would use to actually run the ANOVA however though in theory it should work, it does not because of problems with the data. 
+```{r}
+ggboxplot(IDpedigree, x = "mRNA_df_means", y = "V1")
+
+IDpedigree <- as.data.frame(IDpedigree)
+
+res.aov2 <- aov(V1 ~ mRNA_df_means + V2, data = IDpedigree)
+Anova(ANOVAdata, type = "III", test.statistic= "Wald")
+summary(res.aov2)
+
+```
+
+#I was not able to do an ANOVA with the mRNA data. After troubleshooting why, this was because there was no read length data available so I didn't have the right amount of interacting variables to do the two way ANOVA. If you assess IDpedigree you can see that there isn't anyway to do the ANOVA due to missing data. 
+#The last chunk of code is where I would start for actually doing the ANOVA if we had better data avaiable. 
+
+
