@@ -1,0 +1,155 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+#Combine individual count tables into one and write to file
+library(purrr)
+library(tidyverse)
+library(GenomicRanges)
+library(Biobase)
+library(DESeq2)
+library(limma)
+library(Glimma)
+library(gplots)
+library(RColorBrewer)
+library(GEOquery)
+library(tibble)
+library(ggplot2)
+library(reshape2)
+library(viridis)
+
+#Provide list of files to read in 
+f_files<- list.files("//las-dfs-01.las.iastate.edu/lss/research/sna-lab/kmh/projects/BCB546_Final/mRNA", pattern = "_featureCounts.txt", full.names = T)
+#Provide metadata table
+sample_mRNA <- read.csv("C:/Users/kmjoh/Desktop/EEOB546_Final_Yay-RNA/data/mRNA_metadata.txt", header = FALSE, stringsAsFactors = TRUE, sep = "\t")
+#Combine count tables
+read_in_feature_counts<- function(file){
+        cnt<- read_tsv(file, col_names =T, comment = "#")
+        cnt<- cnt %>% dplyr::select(-Chr, -Start, -End, -Strand, -Length)
+        return(cnt)
+}
+        
+mRNA_raw_counts<- map(f_files, read_in_feature_counts)
+mRNA_raw_counts_df<- purrr::reduce(mRNA_raw_counts, inner_join) 
+colnames(mRNA_raw_counts_df)<-gsub("Aligned.out.sam","",colnames(mRNA_raw_counts_df))
+#Write to file
+write.table(mRNA_raw_counts_df, file = "C:/Users/kmjoh/Desktop/EEOB546_Final_Yay-RNA/data/mRNA_raw_counts.txt", sep = "\t", quote = F)
+
+#Provide list of sRNA files
+s_files<- list.files("//las-dfs-01.las.iastate.edu/lss/research/sna-lab/kmh/projects/BCB546_Final/sRNA", pattern = "_featureCounts.txt", full.names = T)
+#Provide sRNA metadata
+sample_sRNA <- read.csv("C:/Users/kmjoh/Desktop/EEOB546_Final_Yay-RNA/data/sRNA_metadata.txt", header = TRUE, stringsAsFactors = TRUE, sep = "\t")
+
+sRNA_raw_counts<- map(s_files, read_in_feature_counts)
+sRNA_raw_counts_df<- purrr::reduce(sRNA_raw_counts, inner_join)
+colnames(sRNA_raw_counts_df)<-gsub(".sam","",colnames(sRNA_raw_counts_df))
+colnames(sRNA_raw_counts_df)<-gsub("sam/","",colnames(sRNA_raw_counts_df))
+
+#Write to file
+write.table(sRNA_raw_counts_df, file = "C:/Users/kmjoh/Desktop/EEOB546_Final_Yay-RNA/data/sRNA_raw_counts.txt", sep = "\t", quote = F)
+
+```
+
+
+Create normalized counts using DESeq2
+```{r}
+#Convert rownames to features
+countdata_mRNA <- mRNA_raw_counts_df[,-1]
+rownames(countdata_mRNA) <- (mRNA_raw_counts_df$Geneid)
+
+#Create DESeq object
+ddsmRNA <- DESeqDataSetFromMatrix(countData = countdata_mRNA,
+                                            colData = sample_mRNA, design = ~ V4)
+#Normalize count data
+ddsmRNA <- estimateSizeFactors(ddsmRNA)
+normalized_mRNA <- counts(ddsmRNA, normalized=TRUE)
+
+#Write normalized file
+write.table(normalized_mRNA, file="normalized_mRNA.txt", sep="\t", quote=F, col.names=NA)
+
+#Convert rownames to features
+countdata_sRNA <- sRNA_raw_counts_df[,-1]
+rownames(countdata_sRNA) <- (sRNA_raw_counts_df$Geneid)
+#Match colnames with rownames
+smpl_sRNA <- sample_sRNA[,-1]
+rownames(smpl_sRNA) <- (sample_sRNA$Sample)
+dds_sRNA <- DESeqDataSetFromMatrix(countData = countdata_sRNA,
+                                            colData = sample_sRNA, design = ~ Type)
+#Normalize count data
+dds_sRNA <- estimateSizeFactors(dds_sRNA)
+normalized_sRNA <- counts(dds_sRNA, normalized=TRUE)
+
+#Write normalized file
+write.table(normalized_sRNA, file="normalized_sRNA.txt", sep="\t", quote=F, col.names=NA)
+```
+
+Run DESeq for comparison between tissues and genotypes
+```{r}
+#Run DESeq
+deseq_mRNA <- DESeq(ddsmRNA)
+deseq_sRNA <- DESeq(dds_sRNA)
+
+#Do variance stabilizing transformation
+vst_mRNA <- vst(deseq_mRNA, blind=FALSE)
+vst_sRNA <- vst(deseq_sRNA)
+
+#PCA for fun
+a <- plotPCA(rld_mRNA, intgroup = "V2", ntop = 10000)
+a
+b <- plotPCA(rld_sRNA, intgroup = "Genotype", ntop = 10000)
+b
+
+
+# Get results tables from DESeq
+mRNA_res <- results(deseq_mRNA)
+sRNA_res <- results(deseq_sRNA)
+
+#Convert results to dataframes
+mRNA_resDF <- as.data.frame(mRNA_res)
+mRNA_resDF <- as.data.frame(mRNA_res)
+```
+
+Try to create heatmaps based on DESeq results (used https://genviz.org/module-04-expression/0004/02/01/DifferentialExpression/ for help)
+
+```{r}
+#Convert vst objects created in last step to data frames
+# mRNA
+vst_mRNA <- assay(vst_mRNA)
+vst_mRNA <- as.data.frame(vst_mRNA)
+vst_mRNA$Gene <- rownames(vst_mRNA)
+head(vst_mRNA)
+# sRNA
+vst_sRNA2 <- assay(vst_sRNA)
+vst_sRNA <- as.data.frame(vst_sRNA2)
+vst_sRNA$Gene <- rownames(vst_sRNA)
+head(vst_sRNA)
+
+# Keep only significantly expressed genes
+sig_mRNA <- rownames(mRNA_resDF[mRNA_resDF$padj <= .05 & abs(mRNA_resDF$log2FoldChange) > 3,])
+vst_mRNA <- vst_mRNA[vst_mRNA$Gene %in% sig_mRNA,]
+
+sig_sRNA <- rownames(sRNA_resDF[sRNA_resDF$padj <= .05 & abs(sRNA_resDF$log2FoldChange) > 3,])
+vst_sRNA <- vst_sRNA[vst_sRNA$Gene %in% sig_sRNA,]
+
+
+#Reshape to long format for ggplot2
+
+mRNA_long <- melt(vst_mRNA, id.vars = c("Gene"))
+sRNA_long <- melt(vst_sRNA, id.vars = c("Gene"))
+
+
+#Make a heatmap
+heatmap_mRNA <- ggplot(mRNA_long, aes(x=variable, y=Gene, fill=value)) + geom_raster() + scale_fill_viridis(trans="sqrt") + theme(axis.text.x=element_text(angle=65, hjust=1), axis.text.y=element_blank(), axis.ticks.y=element_blank())
+heatmap_mRNA
+
+
+heatmap_sRNA <- ggplot(sRNA_long, aes(x=variable, y=Gene, fill=value)) + geom_raster() + scale_fill_viridis(trans="sqrt") + theme(axis.text.x=element_text(angle=65, hjust=1), axis.text.y=element_blank(), axis.ticks.y=element_blank())
+heatmap_sRNA
+```
+

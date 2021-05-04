@@ -10,7 +10,7 @@
 #SBATCH --mail-type=BEGIN 
 #SBATCH --mail-type=END 
 #SBATCH --mail-type=FAIL
-#cd /work/LAS/sna-lab/kmh/BCB585_tmp
+cd /work/LAS/sna-lab/kmh/BCB585_tmp
 #Load modules
 module load sra-toolkit/2.9.6-ub7kz5h
 module load py-cutadapt/1.13-py2-e2j6srt #apparently necessary to run readarray command
@@ -18,8 +18,6 @@ module load trimmomatic/0.36-lkktrba
 module load gcc/7.3.0-xegsmw4
 module load bowtie/1.2-26wthei
 module load r-rjava/0.9-8-py2-r3.4-wadatwr
-module load samtools
-module load py-htseq/0.11.2-py2-4757mqt
 module load subread/1.6.0-ak6vxhs
 # Read in sample file to use parts
 readarray -t FILES < sRNA_Accessions.txt
@@ -29,11 +27,20 @@ read -ra INFO <<< "$SpudsMac"
 # Cut relevant column information into variables
 SRA="$(cut -f 1 <<< $INFO)"
 SAMPLE="$(cut -f 2 <<< $INFO)"
+# Make directories if they don't exist
+
+mkdir -p sam
+mkdir -p counts
+mkdir -p trimmed
+
 # Pull FASTA information from NCBI based on SRA number
-fasterq-dump -p -t /tmp ${SRA}
+fasterq-dump -p -t /work/LAS/sna-lab/kmh/BCB585_tmp_sRNA/tmp ${SRA}
 # Trim adapters using trimmomatic
-trimmomatic SE -phred33 ${SRA}.fastq ${SAMPLE}_1_out.fastq ILLUMINACLIP:TruSeq3-SE.fa:4:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:18
-#Align sRNAs using bowtie
-bowtie -v 1 -m 50 Zea_mays ${SAMPLE}_1_out.fastq -S ${SAMPLE}.sam
+trimmomatic SE -phred33 ${SRA}.fastq trimmed/${SAMPLE}_1_out.fastq ILLUMINACLIP:TruSeq3-SE.fa:4:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:18
+
+#Align sRNAs using bowtie2
+bowtie -a -n 1 -l 50 Zea_mays ${SRA}.trimmed.fastq -S sam/${SAMPLE}.sam
+
 #Generate count tables
-featureCounts -M -d 18 -D 34 -t exon -g gene_id -a B73v5.gtf -o ${SAMPLE}_featureCounts.txt ${SAMPLE}.sam
+featureCounts -M -d 18 -D 34 -t exon -g gene_id -a B73v5.gtf -o counts/${SAMPLE}_featureCounts.txt sam/${SAMPLE}.sam
+

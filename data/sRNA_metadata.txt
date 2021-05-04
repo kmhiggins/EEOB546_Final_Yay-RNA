@@ -56,3 +56,14 @@ Zm_Oh43xMo17_E	Oh43.Mo17	Endosperm	hybrid
 Zm_Oh43xOh43_E	Oh43.Oh43	Endosperm	hybrid
 Zm_Oh43xPH207_E	Oh43.PH207	Endosperm	hybrid
 Zm_P_I	PH207	Internode	Inbred
+Zm_P_L	PH207	Leaf	Inbred
+Zm_P_R	PH207	Seedling-root	Inbred
+Zm_P_S	PH207	Seedling-shoot	Inbred
+Zm_PH207xMo17_E	PH207.Mo17	Endosperm	hybrid
+Zm_PHB47_I	PHB47	Internode	Inbred
+Zm_PHB47_L	PHB47	Leaf	Inbred
+Zm_PxB_E	PH207.B73	Endosperm	hybrid
+Zm_PxB_I	PH207.B73	Internode	hybrid
+Zm_PxB_R	PH207.B73	Seedling-root	hybrid
+Zm_PxB_S	PH207.B73	Seedling-shoot	hybrid
+Zm_PxP_E	PH207.PH207	Endosperm	hybrid
