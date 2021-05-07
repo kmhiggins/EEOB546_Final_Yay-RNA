@@ -81,3 +81,40 @@ In this folder you will find two types of scripts used in our project, shell scr
 The shell scripts, count_table_mRNA.sh and count_table_sRNA.sh, are used for the initial mapping step and would be best run on a an HPC. They are dependent on the availability of data files mRNA_accessions.txt and sRNA_accessions.txt
 
 The R script normalization_and_heatmap.Rmd is used for normalizing the counts, running them through DESeq2 and generating heatmaps of differentially expressed genes. It is dependent on either the featureCount.txt files generated from the shell scripts or on the normalized or raw_count data. 
+
+
+
+The R scripts PCA_of_mRNA.Rmd and ANOVA_of_sRNA.Rmd were used to attempt to recreate figures 3 and 4 in Crisp et al., 2020. 
+
+# Required Packages
+The following packages are needed to create the PCA:
+
+>BiocManager
+>
+>pcaMethods 
+
+You will also need the following files found in data:
+
+>normalized_mRNA.txt 
+
+The following packages are needed to create the ANOVA: 
+
+>ggpubr
+>
+>car
+>
+>dplyr
+>
+>tidyverse 
+>
+>stringr 
+
+You will also need the following files found in data:
+
+>normalized_mRNA.txt
+>
+>mRNA_metadate.txt
+
+
+
+
