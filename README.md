@@ -18,18 +18,31 @@ The following shell script packages are required to generate count tables:
 
 The following R packages are required to generate count tables and heatmaps:
 > purrr
+> 
 > tidyverse
+> 
 > GenomicRanges
+> 
 > Biobase
+> 
 > DESeq2
+> 
 > limma
+> 
 > Glimma
+> 
 > gplots
+> 
 > RColorBrewer
+> 
 > GEOquery
+> 
 > tibble
+> 
 > ggplot2
+> 
 > reshape2
+> 
 > viridis
 
 ## Data Folder
@@ -41,19 +54,24 @@ In this folder you will find data required for several parts of processing
 You will need the following data files for generating read counts:
 
 > mRNA_accessions.txt
+> 
 > sRNA_Accessions.txt
 
 #### R Studio
 You will need the following data files for running Rscripts:
 
 > mRNA_metadata.txt
+> 
 > sRNA_metadata.txt
 
 If you choose to generate your own count files the following are not necessary, but are if you are only looking to run the R scripts:
 
 > mRNA_raw_counts.txt
+> 
 > sRNA_raw_counts.txt
+> 
 > normalized_mRNA.txt
+> 
 > normalized_sRNA.txt
 
 ## Scripts Folder
