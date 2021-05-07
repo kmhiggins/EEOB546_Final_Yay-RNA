@@ -1,6 +1,6 @@
 # EEOB546_Final_Yay-RNA
 
-In this repository you will find shell scripts, R scripts, and some data involved in the attempted duplication of the paper "Variation and Inheritance of Small RNAs in Maize
+In this repository you will find shell scripts, R scripts, and data involved in the attempted duplication of the paper "Variation and Inheritance of Small RNAs in Maize
 Inbreds and F1 Hybrids" by Crisp, et al. 2020. 
 
 ## Required Packages
@@ -16,23 +16,50 @@ The following shell script packages are required to generate count tables:
 
 `bowtie`
 
-## Data 
-To generate count tables used for downstream analysis, download the B73v5 genome fasta file, and gff3 annotation file from maizegdb.org. 
-You will then want to convert the gff3 file to gtf using the following command from the Cufflinks package:
+The following R packages are required to generate count tables and heatmaps:
+> purrr
+> tidyverse
+> GenomicRanges
+> Biobase
+> DESeq2
+> limma
+> Glimma
+> gplots
+> RColorBrewer
+> GEOquery
+> tibble
+> ggplot2
+> reshape2
+> viridis
 
-` gffread Zm-B73-REFERENCE-NAM-5.0_Zm00001eb.1.gff3 -T -o B73v5.gtf` 
+## Data Folder
 
-This will convert the gff3 file into the gtf file required by STAR and featureCounts in the mRNA.sh and sRNA.sh scripts.
+In this folder you will find data required for several parts of processing
 
-You will also want to generate the index files for Bowtie and STAR ahead of running the shell scripts.
-These may take a long time to run.
+#### Getting counts
 
-Bowtie Index:
+You will need the following data files for generating read counts:
 
-`bowtie-build Zm-B73-REFERENCE-NAM-5.0.fa Zea_mays`
+> mRNA_accessions.txt
+> sRNA_Accessions.txt
 
-STAR Index:
+#### R Studio
+You will need the following data files for running Rscripts:
 
-`STAR --runThreadN 6 --runMode genomeGenerate --genomeDir /path/to/directory/B73_v5 --genomeFastaFiles /path/to/file/Zm-B73-REFERENCE-NAM-5.0.fa --sjdbGTFfile /path/to/file/B73v5.gtf --sjdbOverhang 99`
+> mRNA_metadata.txt
+> sRNA_metadata.txt
 
-Once the count tables are generated through featureCounts, they are ready to be passed to R using Normalization_and_Heatmap.Rmd which uses DESeq2 to normalize and analyze the combined count tables. 
+If you choose to generate your own count files the following are not necessary, but are if you are only looking to run the R scripts:
+
+> mRNA_raw_counts.txt
+> sRNA_raw_counts.txt
+> normalized_mRNA.txt
+> normalized_sRNA.txt
+
+## Scripts Folder
+
+In this folder you will find two types of scripts used in our project, shell scripts and R scripts
+
+The shell scripts, count_table_mRNA.sh and count_table_sRNA.sh, are used for the initial mapping step and would be best run on a an HPC. They are dependent on the availability of data files mRNA_accessions.txt and sRNA_accessions.txt
+
+The R script normalization_and_heatmap.Rmd is used for normalizing the counts, running them through DESeq2 and generating heatmaps of differentially expressed genes. It is dependent on either the featureCount.txt files generated from the shell scripts or on the normalized or raw_count data. 
