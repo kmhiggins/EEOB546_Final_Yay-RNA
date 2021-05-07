@@ -1,0 +1,352 @@
+---
+title: "Average Frequency of sRNAs"
+author: "Carter Newton"
+output: html_document
+---
+
+### Figure 1 Actual Data
+\ 
+
+- create data.frame of original data 
+```{r echo=TRUE, results='hide'}
+ns <- read.delim("OriginalData/normalized_sRNA.txt")
+nm <- read.delim("OriginalData/normalized_mRNA.txt")
+```
+\ 
+
+- next create data frame pushing column 1 "X" into the row names 
+```{r echo=TRUE, results='hide'}
+ns_row <- ns
+nm_row <- nm
+rownames(ns_row) <- ns_row$X
+ns_row <- subset(ns_row, select = -X)
+rownames(nm_row) <- nm_row$X
+nm_row <- subset(nm_row, select = -X)
+```
+\ 
+
+- remove all genes that contain no sRNA mapping in every sample 
+```{r echo=TRUE, results='hide'}
+ns_mapping1 <- ns_row[rowSums(ns_row[])>0,]
+```
+\ 
+
+- create data frames specific to tissue type 
+```{r echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+library(dplyr)
+```
+
+```{r echo=TRUE, results='hide'}
+ns_mapgeneR <- ns_mapping1 %>% select(ends_with('R'))
+ns_mapgeneE <- ns_mapping1 %>% select(ends_with('E'))
+ns_mapgeneS <- ns_mapping1 %>% select(ends_with('S'))
+ns_mapgeneI <- ns_mapping1 %>% select(ends_with('I'))
+ns_mapgeneL <- ns_mapping1 %>% select(ends_with('L'))
+```
+\ 
+
+- filter out genes with no mapping
+```{r echo=TRUE, results='hide'}
+ns_mapgeneR <- ns_mapgeneR[rowSums(ns_mapgeneR[])>0,]
+ns_mapgeneE <- ns_mapgeneE[rowSums(ns_mapgeneE[])>0,]
+ns_mapgeneS <- ns_mapgeneS[rowSums(ns_mapgeneS[])>0,]
+ns_mapgeneI <- ns_mapgeneI[rowSums(ns_mapgeneI[])>0,]
+ns_mapgeneL <- ns_mapgeneL[rowSums(ns_mapgeneL[])>0,]
+```
+\ 
+
+- after "summing" out the tissue specific variables, we now will form whole integers by dividing each column by the smallest value in it and then recombining all the columns back together
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+#For endosperm
+ns_mapgeneE$row <- 1:nrow(ns_mapgeneE)
+ns_mapgeneE$join <- row.names(ns_mapgeneE) #is this needed? may as well keep it
+rownames(ns_mapgeneE) <- ns_mapgeneE$row
+ns_mapgeneE <- subset(ns_mapgeneE, select = -row)
+
+n <- ncol(ns_mapgeneE)
+i <- 2
+c <- min(select(ns_mapgeneE, 1)[select(ns_mapgeneE, 1)!=min(select(ns_mapgeneE, 1))])
+ns_testE <- select(ns_mapgeneE, 1)/ c
+ns_testE <- round(ns_testE)
+ns_testE$join <- row.names(ns_testE)
+while (i<n) {
+  c <- min(select(ns_mapgeneE, i)[select(ns_mapgeneE, i)!=min(select(ns_mapgeneE, i))])
+  ns_testEmerge <- select(ns_mapgeneE, i)/ c
+  ns_testEmerge <- round(ns_testEmerge)
+  ns_testEmerge$join <- row.names(ns_testEmerge)
+  ns_testE <- merge(ns_testE, ns_testEmerge, sort = FALSE)
+  i <- i+1
+}
+ns_Esort <- ns_testE
+
+
+#For Root
+ns_mapgeneR$row <- 1:nrow(ns_mapgeneR)
+ns_mapgeneR$join <- row.names(ns_mapgeneR) #is this needed? may as well keep it
+rownames(ns_mapgeneR) <- ns_mapgeneR$row
+ns_mapgeneR <- subset(ns_mapgeneR, select = -row)
+
+n <- ncol(ns_mapgeneR)
+i <- 2
+c <- min(select(ns_mapgeneR, 1)[select(ns_mapgeneR, 1)!=min(select(ns_mapgeneR, 1))])
+ns_testR <- select(ns_mapgeneR, 1)/ c
+ns_testR <- round(ns_testR)
+ns_testR$join <- row.names(ns_testR)
+while (i<n) {
+  c <- min(select(ns_mapgeneR, i)[select(ns_mapgeneR, i)!=min(select(ns_mapgeneR, i))])
+  ns_testRmerge <- select(ns_mapgeneR, i)/ c
+  ns_testRmerge <- round(ns_testRmerge)
+  ns_testRmerge$join <- row.names(ns_testRmerge)
+  ns_testR <- merge(ns_testR, ns_testRmerge, sort = FALSE)
+  i <- i+1
+}
+ns_Rsort <- ns_testR
+
+
+#For internode
+ns_mapgeneI$row <- 1:nrow(ns_mapgeneI)
+ns_mapgeneI$join <- row.names(ns_mapgeneI) #is this needed? may as well keep it
+rownames(ns_mapgeneI) <- ns_mapgeneI$row
+ns_mapgeneI <- subset(ns_mapgeneI, select = -row)
+
+n <- ncol(ns_mapgeneI)
+i <- 2
+c <- min(select(ns_mapgeneI, 1)[select(ns_mapgeneI, 1)!=min(select(ns_mapgeneI, 1))])
+ns_testI <- select(ns_mapgeneI, 1)/ c
+ns_testI <- round(ns_testI)
+ns_testI$join <- row.names(ns_testI)
+while (i<n) {
+  c <- min(select(ns_mapgeneI, i)[select(ns_mapgeneI, i)!=min(select(ns_mapgeneI, i))])
+  ns_testImerge <- select(ns_mapgeneI, i)/ c
+  ns_testImerge <- round(ns_testImerge)
+  ns_testImerge$join <- row.names(ns_testImerge)
+  ns_testI <- merge(ns_testI, ns_testImerge, sort = FALSE)
+  i <- i+1
+}
+ns_Isort <- ns_testI
+
+
+#For shoot
+ns_mapgeneS$row <- 1:nrow(ns_mapgeneS)
+ns_mapgeneS$join <- row.names(ns_mapgeneS) #is this needed? may as well keep it
+rownames(ns_mapgeneS) <- ns_mapgeneS$row
+ns_mapgeneS <- subset(ns_mapgeneS, select = -row)
+
+n <- ncol(ns_mapgeneS)
+i <- 2
+c <- min(select(ns_mapgeneS, 1)[select(ns_mapgeneS, 1)!=min(select(ns_mapgeneS, 1))])
+ns_testS <- select(ns_mapgeneS, 1)/ c
+ns_testS <- round(ns_testS)
+ns_testS$join <- row.names(ns_testS)
+while (i<n) {
+  c <- min(select(ns_mapgeneS, i)[select(ns_mapgeneS, i)!=min(select(ns_mapgeneS, i))])
+  ns_testSmerge <- select(ns_mapgeneS, i)/ c
+  ns_testSmerge <- round(ns_testSmerge)
+  ns_testSmerge$join <- row.names(ns_testSmerge)
+  ns_testS <- merge(ns_testS, ns_testSmerge, sort = FALSE)
+  i <- i+1
+}
+ns_Ssort <- ns_testS
+
+
+#For leaf
+ns_mapgeneL$row <- 1:nrow(ns_mapgeneL)
+ns_mapgeneL$join <- row.names(ns_mapgeneL) #is this needed? may as well keep it
+rownames(ns_mapgeneL) <- ns_mapgeneL$row
+ns_mapgeneL <- subset(ns_mapgeneL, select = -row)
+
+n <- ncol(ns_mapgeneL)
+i <- 2
+c <- min(select(ns_mapgeneL, 1)[select(ns_mapgeneL, 1)!=min(select(ns_mapgeneL, 1))])
+ns_testL <- select(ns_mapgeneL, 1)/ c
+ns_testL <- round(ns_testL)
+ns_testL$join <- row.names(ns_testL)
+while (i<n) {
+  c <- min(select(ns_mapgeneL, i)[select(ns_mapgeneL, i)!=min(select(ns_mapgeneL, i))])
+  ns_testLmerge <- select(ns_mapgeneL, i)/ c
+  ns_testLmerge <- round(ns_testLmerge)
+  ns_testLmerge$join <- row.names(ns_testLmerge)
+  ns_testL <- merge(ns_testL, ns_testLmerge, sort = FALSE)
+  i <- i+1
+}
+ns_Lsort <- ns_testL
+```
+\ 
+
+- Now we need to form percentages respective to the original figure
+```{r echo=TRUE, results='hide'}
+#For endosperm
+library(plyr)
+
+totalobvE <- (ncol(ns_Esort)-1)*nrow(ns_Esort)
+total0E <- ldply(ns_Esort, function(c) sum(c==0))
+total0E <- sum(total0E$V1)
+totalE <- totalobvE-total0E
+
+total1E <- ldply(ns_Esort, function(c) sum(c==1))
+total1E <- total1E[-c(1),]
+total1E <- sum(total1E$V1)
+
+total2to10E <- ldply(ns_Esort, function(c) sum(c<=10))
+total2to10E <- total2to10E[-c(1),]
+total2to10E <- sum(total2to10E$V1)
+total2to10E <- total2to10E-(total0E+total1E)
+
+total11to50E <- ldply(ns_Esort, function(c) sum(c<=50))
+total11to50E <- total11to50E[-c(1),]
+total11to50E <- sum(total11to50E$V1)
+total11to50E <- total11to50E-(total0E+total1E+total2to10E)
+
+total51E <- ldply(ns_Esort, function(c) sum(c>=51))
+total51E <- total51E[-c(1),]
+total51E <- sum(total51E$V1)
+
+percent1E <- total1E/totalE
+percent2to10E <- total2to10E/totalE
+percent11to50E <- total11to50E/totalE
+percent51E <- total51E/totalE
+
+
+#For root
+totalobvR <- (ncol(ns_Rsort)-1)*nrow(ns_Rsort)
+total0R <- ldply(ns_Rsort, function(c) sum(c==0))
+total0R <- sum(total0R$V1)
+totalR <- totalobvR-total0R
+
+total1R <- ldply(ns_Rsort, function(c) sum(c==1))
+total1R <- total1R[-c(1),]
+total1R <- sum(total1R$V1)
+
+total2to10R <- ldply(ns_Rsort, function(c) sum(c<=10))
+total2to10R <- total2to10R[-c(1),]
+total2to10R <- sum(total2to10R$V1)
+total2to10R <- total2to10R-(total0R+total1R)
+
+total11to50R <- ldply(ns_Rsort, function(c) sum(c<=50))
+total11to50R <- total11to50R[-c(1),]
+total11to50R <- sum(total11to50R$V1)
+total11to50R <- total11to50R-(total0R+total1R+total2to10R)
+
+total51R <- ldply(ns_Rsort, function(c) sum(c>=51))
+total51R <- total51R[-c(1),]
+total51R <- sum(total51R$V1)
+
+percent1R <- total1R/totalR
+percent2to10R <- total2to10R/totalR
+percent11to50R <- total11to50R/totalR
+percent51R <- total51R/totalR
+
+
+#For seedling
+totalobvS <- (ncol(ns_Ssort)-1)*nrow(ns_Ssort)
+total0S <- ldply(ns_Ssort, function(c) sum(c==0))
+total0S <- sum(total0S$V1)
+totalS <- totalobvS-total0S
+
+total1S <- ldply(ns_Ssort, function(c) sum(c==1))
+total1S <- total1S[-c(1),]
+total1S <- sum(total1S$V1)
+
+total2to10S <- ldply(ns_Ssort, function(c) sum(c<=10))
+total2to10S <- total2to10S[-c(1),]
+total2to10S <- sum(total2to10S$V1)
+total2to10S <- total2to10S-(total0S+total1S)
+
+total11to50S <- ldply(ns_Ssort, function(c) sum(c<=50))
+total11to50S <- total11to50S[-c(1),]
+total11to50S <- sum(total11to50S$V1)
+total11to50S <- total11to50S-(total0S+total1S+total2to10S)
+
+total51S <- ldply(ns_Ssort, function(c) sum(c>=51))
+total51S <- total51S[-c(1),]
+total51S <- sum(total51S$V1)
+
+percent1S <- total1S/totalS
+percent2to10S <- total2to10S/totalS
+percent11to50S <- total11to50S/totalS
+percent51S <- total51S/totalS
+
+
+#For leaf
+totalobvL <- (ncol(ns_Lsort)-1)*nrow(ns_Lsort)
+total0L <- ldply(ns_Lsort, function(c) sum(c==0))
+total0L <- sum(total0L$V1)
+totalL <- totalobvL-total0L
+
+total1L <- ldply(ns_Lsort, function(c) sum(c==1))
+total1L <- total1L[-c(1),]
+total1L <- sum(total1L$V1)
+
+total2to10L <- ldply(ns_Lsort, function(c) sum(c<=10))
+total2to10L <- total2to10L[-c(1),]
+total2to10L <- sum(total2to10L$V1)
+total2to10L <- total2to10L-(total0L+total1L)
+
+total11to50L <- ldply(ns_Lsort, function(c) sum(c<=50))
+total11to50L <- total11to50L[-c(1),]
+total11to50L <- sum(total11to50L$V1)
+total11to50L <- total11to50L-(total0L+total1L+total2to10L)
+
+total51L <- ldply(ns_Lsort, function(c) sum(c>=51))
+total51L <- total51L[-c(1),]
+total51L <- sum(total51L$V1)
+
+percent1L <- total1L/totalL
+percent2to10L <- total2to10L/totalL
+percent11to50L <- total11to50L/totalL
+percent51L <- total51L/totalL
+
+
+#For internode
+totalobvI <- (ncol(ns_Isort)-1)*nrow(ns_Isort)
+total0I <- ldply(ns_Isort, function(c) sum(c==0))
+total0I <- sum(total0I$V1)
+totalI <- totalobvI-total0I
+
+total1I <- ldply(ns_Isort, function(c) sum(c==1))
+total1I <- total1I[-c(1),]
+total1I <- sum(total1I$V1)
+
+total2to10I <- ldply(ns_Isort, function(c) sum(c<=10))
+total2to10I <- total2to10I[-c(1),]
+total2to10I <- sum(total2to10I$V1)
+total2to10I <- total2to10I-(total0I+total1I)
+
+total11to50I <- ldply(ns_Isort, function(c) sum(c<=50))
+total11to50I <- total11to50I[-c(1),]
+total11to50I <- sum(total11to50I$V1)
+total11to50I <- total11to50I-(total0I+total1I+total2to10I)
+
+total51I <- ldply(ns_Isort, function(c) sum(c>=51))
+total51I <- total51I[-c(1),]
+total51I <- sum(total51I$V1)
+
+percent1I <- total1I/totalI
+percent2to10I <- total2to10I/totalI
+percent11to50I <- total11to50I/totalI
+percent51I <- total51I/totalI
+```
+\ 
+
+- with the percentages formed, now i need to get them organized into a data frame for the graph to interpret
+
+```{r echo=TRUE}
+library(ggplot2)
+
+figure1A2 <- data.frame('tissue type'=rep(c('Root', 'Endosperm', 'Seedling', 'Internode', 'Leaf'), each=4),
+'mapping locations'=rep(c('1', '2to10', '11to50', '>50'), times=5),
+'percent'=c(percent1R, percent2to10R, percent11to50R, percent51R, 
+            percent1E, percent2to10E, percent11to50E, percent51E,
+            percent1S, percent2to10S, percent11to50S, percent51S,
+            percent1I, percent2to10I, percent11to50I, percent51I,
+            percent1L, percent2to10L, percent11to50L, percent51L))
+
+figure1Agraph <- ggplot(figure1A2, aes(fill=mapping.locations, x=tissue.type, y=percent)) + geom_bar(position = 'stack', stat = 'identity') + coord_flip() + theme_minimal() + scale_fill_brewer(palette = 'YlOrRd')
+```
+```{r echo=TRUE}
+figure1Agraph
+```
+\ 
+
+- that is all!
